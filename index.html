@@ -156,6 +156,8 @@ main{ max-width:840px; margin:0 auto; padding:18px 14px 10px; }
 .board-row .pos{ font-family:'IBM Plex Mono',monospace; color:var(--muted); font-size:12px; width:16px;}
 .board-row .pname{ flex:1; font-weight:700; font-size:13.5px;}
 .board-row .pval{ font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:16px; background:var(--paper); padding:2px 10px; border-radius:6px; border:1px solid var(--line);}
+.board-row .pval-pair{ display:flex; gap:6px; }
+.board-row .pval-pair .pval{ padding:2px 8px; }
 
 /* ---------- MODAL ---------- */
 .overlay{
@@ -186,6 +188,11 @@ input[type=number]{ width:64px; text-align:center; font-family:'IBM Plex Mono',m
 .toggle-row span{ font-size:13.5px; font-weight:600;}
 
 table.stat-table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:12.5px;}
+.table-scroll{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.table-scroll table.stat-table{ margin-top:0; min-width:560px; }
+.table-scroll table.stat-table th, .table-scroll table.stat-table td{ text-align:center; white-space:nowrap; padding:8px 8px;}
+.table-scroll table.stat-table td.pname{ text-align:left; }
+.table-scroll table.stat-table tbody tr:nth-child(1) td{ background:rgba(217,164,65,0.12); }
 table.stat-table th{ text-align:left; font-size:9.5px; text-transform:uppercase; color:var(--muted); padding:5px 4px; border-bottom:1px solid var(--line); font-weight:700;}
 table.stat-table td{ padding:6px 4px; border-bottom:1px solid var(--line); vertical-align:middle;}
 table.stat-table td.pname{ font-weight:700; font-size:13px;}
@@ -280,6 +287,7 @@ table.stat-table select{ padding:4px 2px; font-size:12px; width:62px;}
       <canvas id="evoChart" height="180"></canvas>
     </div>
 
+    <div id="statsMainTable"></div>
     <div id="statsBoards"></div>
   </section>
 
@@ -378,6 +386,7 @@ function playerStats(pid, filter){
   return { jugados, partes, goles, asist, encaj, autogoles,
     golesPP: jugados? (goles/jugados).toFixed(2):'—',
     asistPP: jugados? (asist/jugados).toFixed(2):'—',
+    participacionPP: jugados? (((goles+asist)/jugados)).toFixed(2):'—',
     participacion };
 }
 function trainingStats(pid){
@@ -559,13 +568,41 @@ function renderStats(){
       sorted.map((r,i)=>`<div class="board-row"><div class="pos">${i+1}</div><div class="pname">${r.p.name}</div><div class="pval">${valueFn(r)}${unit||''}</div></div>`).join('');
     root.appendChild(el);
   }
+  // Igual que board(), pero muestra dos valores lado a lado en la misma fila
+  // (Partidos Jugados y Partes jugadas), para poder compararlos de un vistazo.
+  // Se ordena por el primer valor y, en caso de empate, por el segundo.
+  function boardDual(title, tag, arr, valueFn1, valueFn2){
+    const sorted = arr.slice().sort((a,b)=> (valueFn1(b)-valueFn1(a)) || (valueFn2(b)-valueFn2(a)) ).slice(0,13);
+    const el = document.createElement('div');
+    el.className='board';
+    el.innerHTML = `<div class="board-head">${title}<span>${tag}</span></div>` +
+      sorted.map((r,i)=>`<div class="board-row"><div class="pos">${i+1}</div><div class="pname">${r.p.name}</div>`+
+        `<div class="pval-pair"><span class="pval">${valueFn1(r)}</span><span class="pval">${valueFn2(r)}</span></div></div>`).join('');
+    root.appendChild(el);
+  }
+  // Tabla completa de participación en el gol: PJ, goles, goles/PJ, asistencias,
+  // asistencias/PJ, participación % y participación/PJ. Ordenada por % de participación.
+  function participationTable(){
+    const sorted = rows.slice().sort((a,b)=> b.st.participacion - a.st.participacion);
+    const el = document.createElement('div');
+    el.className='board';
+    el.innerHTML = `<div class="board-head">Participación en el gol<span>% PARTICIPACIÓN</span></div>`+
+      `<div class="table-scroll"><table class="stat-table"><thead><tr>`+
+        `<th>Jugador/a</th><th>PJ</th><th>Goles</th><th>Goles/PJ</th><th>Asist.</th><th>Asist./PJ</th><th>Particip. %</th><th>Particip./PJ</th>`+
+      `</tr></thead><tbody>`+
+      sorted.map(r=>`<tr><td class="pname">${r.p.name}</td><td>${r.st.jugados}</td><td>${r.st.goles}</td><td>${r.st.golesPP}</td><td>${r.st.asist}</td><td>${r.st.asistPP}</td><td>${r.st.participacion}%</td><td>${r.st.participacionPP}</td></tr>`).join('')+
+      `</tbody></table></div>`;
+    root.appendChild(el);
+  }
   if(!matches.length && !trainings.length){
     root.innerHTML = `<div class="empty"><b>Todavía no hay datos</b>Añade partidos y entrenamientos para ver las clasificaciones.</div>`;
   } else {
+    participationTable();
     board('Máximos goleadores','GOLES', rows, r=>r.st.goles);
     board('Máximos asistentes','ASIST.', rows, r=>r.st.asist);
     board('Más participativos en gol','%', rows, r=>r.st.participacion, '%');
-    board('Más partidos jugados','PJ', rows, r=>r.st.jugados);
+    boardDual('Más partidos jugados','PJ · PARTES', rows, r=>r.st.jugados, r=>r.st.partes);
+
     const gkRows = rows.filter(r=>r.st.encaj>0);
     if(gkRows.length) board('Goles encajados de portero','ENC.', gkRows, r=>r.st.encaj);
     board('Mejor asistencia a entrenos','%', rows, r=>r.tr.pct, '%');
