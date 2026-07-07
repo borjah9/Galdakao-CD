@@ -208,7 +208,7 @@ table.stat-table select{ padding:4px 2px; font-size:12px; width:62px;}
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';document.head.appendChild(s);"></script>
 </head>
 <body>
 
@@ -477,7 +477,7 @@ function renderEvoChart(){
   if(typeof Chart === 'undefined'){
     throw new Error('Chart.js no está disponible (puede que el navegador haya bloqueado el script externo)');
   }
-  const sorted = matchesByComp(statsCompFilter).slice().sort((a,b)=> a.date.localeCompare(b.date));
+  const sorted = matchesByComp(statsCompFilter).slice().sort((a,b)=> (a.date||'').localeCompare(b.date||''));
   const emptyEl = document.getElementById('evoEmpty');
   const canvas = document.getElementById('evoChart');
   if(!sorted.length){
@@ -491,27 +491,36 @@ function renderEvoChart(){
 
   const sel = document.getElementById('evoSelect').value || '__team__';
   const labels = sorted.map(m=> fmtDate(m.date) + (m.rival? ' vs '+m.rival : ''));
-  let goles=0, asist=0;
-  const golesAcum=[], asistAcum=[];
+  let goles=0, asist=0, encaj=0;
+  const golesAcum=[], asistAcum=[], encajAcum=[];
   sorted.forEach(m=>{
     if(sel==='__team__'){
       goles += Object.values(m.stats||{}).reduce((a,s)=>a+(+s.goals||0),0);
       asist += Object.values(m.stats||{}).reduce((a,s)=>a+(+s.assists||0),0);
+      encaj += (m.concededGoals||[]).length;
     } else {
       const s = m.stats[sel];
       goles += s? (+s.goals||0) : 0;
       asist += s? (+s.assists||0) : 0;
     }
-    golesAcum.push(goles); asistAcum.push(asist);
+    golesAcum.push(goles); asistAcum.push(asist); encajAcum.push(encaj);
   });
+
+  // Los goles encajados solo se muestran en la vista de equipo (no por jugador
+  // individual): a esta edad no interesa marcar la cuenta de un portero en concreto,
+  // así que se ofrece como dato de equipo para el cuerpo técnico.
+  const datasets = [
+    { label:'Goles acumulados', data:golesAcum, borderColor:'#16181c', backgroundColor:'rgba(22,24,28,0.06)', borderWidth:2.5, tension:0.25, fill:true, pointRadius:3, pointBackgroundColor:'#16181c' },
+    { label:'Asistencias acumuladas', data:asistAcum, borderColor:'#d9a441', backgroundColor:'rgba(217,164,65,0.08)', borderWidth:2.5, tension:0.25, fill:true, pointRadius:3, pointBackgroundColor:'#d9a441' }
+  ];
+  if(sel==='__team__'){
+    datasets.push({ label:'Goles encajados (equipo)', data:encajAcum, borderColor:'#b8433a', backgroundColor:'rgba(184,67,58,0.07)', borderWidth:2.5, tension:0.25, fill:true, pointRadius:3, pointBackgroundColor:'#b8433a' });
+  }
 
   if(evoChartInstance) evoChartInstance.destroy();
   evoChartInstance = new Chart(canvas.getContext('2d'), {
     type:'line',
-    data:{ labels, datasets:[
-      { label:'Goles acumulados', data:golesAcum, borderColor:'#16181c', backgroundColor:'rgba(22,24,28,0.06)', borderWidth:2.5, tension:0.25, fill:true, pointRadius:3, pointBackgroundColor:'#16181c' },
-      { label:'Asistencias acumuladas', data:asistAcum, borderColor:'#d9a441', backgroundColor:'rgba(217,164,65,0.08)', borderWidth:2.5, tension:0.25, fill:true, pointRadius:3, pointBackgroundColor:'#d9a441' }
-    ]},
+    data:{ labels, datasets },
     options:{
       responsive:true,
       interaction:{ mode:'index', intersect:false },
@@ -572,7 +581,10 @@ function renderStats(){
     console.error('No se pudo generar la gráfica de evolución:', err);
     const emptyEl = document.getElementById('evoEmpty');
     const canvas = document.getElementById('evoChart');
-    if(emptyEl) emptyEl.classList.remove('hidden');
+    if(emptyEl){
+      emptyEl.classList.remove('hidden');
+      emptyEl.innerHTML = `<b>No se pudo generar la gráfica</b>Las clasificaciones de aquí abajo son correctas igualmente.<br><span style="font-size:10px;opacity:.55;">Detalle técnico: ${(err && err.message) ? String(err.message) : String(err)}</span>`;
+    }
     if(canvas) canvas.classList.add('hidden');
   }
 }
