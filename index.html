@@ -319,6 +319,16 @@ const COLLECTION = "galdakao_cd_benjamin_f7"; // nombre de la colección en Fire
 
 const SKEY = { players:'players', matches:'matches', trainings:'trainings', pin:'admin_pin' };
 const DEFAULT_PIN = '2627';
+
+// El PIN nunca se guarda ni se compara en texto plano: se guarda su hash
+// SHA-256. Así, aunque alguien mire el código fuente o la propia base de
+// datos (Firestore), no puede leer el PIN real, solo una huella que no se
+// puede revertir para recuperar el número original.
+async function sha256Hex(text){
+  const bytes = new TextEncoder().encode(text);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(hashBuffer)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
 async function loadAll(){
   const out = {};
   for (const [k,key] of Object.entries(SKEY)){
@@ -464,6 +474,9 @@ function populateEvoSelect(){
   if(prev && [...sel.options].some(o=>o.value===prev)) sel.value = prev;
 }
 function renderEvoChart(){
+  if(typeof Chart === 'undefined'){
+    throw new Error('Chart.js no está disponible (puede que el navegador haya bloqueado el script externo)');
+  }
   const sorted = matchesByComp(statsCompFilter).slice().sort((a,b)=> a.date.localeCompare(b.date));
   const emptyEl = document.getElementById('evoEmpty');
   const canvas = document.getElementById('evoChart');
@@ -482,8 +495,8 @@ function renderEvoChart(){
   const golesAcum=[], asistAcum=[];
   sorted.forEach(m=>{
     if(sel==='__team__'){
-      goles += Object.values(m.stats).reduce((a,s)=>a+(+s.goals||0),0);
-      asist += Object.values(m.stats).reduce((a,s)=>a+(+s.assists||0),0);
+      goles += Object.values(m.stats||{}).reduce((a,s)=>a+(+s.goals||0),0);
+      asist += Object.values(m.stats||{}).reduce((a,s)=>a+(+s.assists||0),0);
     } else {
       const s = m.stats[sel];
       goles += s? (+s.goals||0) : 0;
@@ -520,8 +533,11 @@ document.getElementById('compFilterSelect').onchange = (e)=>{
 
 /* ---------------- RENDER: STATS BOARDS ---------------- */
 function renderStats(){
-  populateEvoSelect();
-  renderEvoChart();
+  // 1) Primero pintamos las clasificaciones. Esto NO debe depender nunca
+  //    de la gráfica de evolución (Chart.js): si esa gráfica falla (por ejemplo
+  //    porque la librería no ha cargado, o por un dato antiguo mal formado),
+  //    antes se quedaba todo en blanco porque el error cortaba la función
+  //    justo al principio, antes de dibujar las tablas.
   const root = document.getElementById('statsBoards');
   root.innerHTML='';
   const rows = players.map(p=>({p, st:playerStats(p.id, statsCompFilter), tr:trainingStats(p.id)}));
@@ -536,15 +552,29 @@ function renderStats(){
   }
   if(!matches.length && !trainings.length){
     root.innerHTML = `<div class="empty"><b>Todavía no hay datos</b>Añade partidos y entrenamientos para ver las clasificaciones.</div>`;
-    return;
+  } else {
+    board('Máximos goleadores','GOLES', rows, r=>r.st.goles);
+    board('Máximos asistentes','ASIST.', rows, r=>r.st.asist);
+    board('Más participativos en gol','%', rows, r=>r.st.participacion, '%');
+    board('Más partidos jugados','PJ', rows, r=>r.st.jugados);
+    const gkRows = rows.filter(r=>r.st.encaj>0);
+    if(gkRows.length) board('Goles encajados de portero','ENC.', gkRows, r=>r.st.encaj);
+    board('Mejor asistencia a entrenos','%', rows, r=>r.tr.pct, '%');
   }
-  board('Máximos goleadores','GOLES', rows, r=>r.st.goles);
-  board('Máximos asistentes','ASIST.', rows, r=>r.st.asist);
-  board('Más participativos en gol','%', rows, r=>r.st.participacion, '%');
-  board('Más partidos jugados','PJ', rows, r=>r.st.jugados);
-  const gkRows = rows.filter(r=>r.st.encaj>0);
-  if(gkRows.length) board('Goles encajados de portero','ENC.', gkRows, r=>r.st.encaj);
-  board('Mejor asistencia a entrenos','%', rows, r=>r.tr.pct, '%');
+
+  // 2) Ahora, aparte y protegida con try/catch, la gráfica de evolución.
+  //    Si algo falla aquí, solo se oculta la gráfica: las clasificaciones
+  //    de arriba ya se han pintado y se quedan visibles.
+  try{
+    populateEvoSelect();
+    renderEvoChart();
+  }catch(err){
+    console.error('No se pudo generar la gráfica de evolución:', err);
+    const emptyEl = document.getElementById('evoEmpty');
+    const canvas = document.getElementById('evoChart');
+    if(emptyEl) emptyEl.classList.remove('hidden');
+    if(canvas) canvas.classList.add('hidden');
+  }
 }
 
 /* ---------------- MODALS ---------------- */
@@ -858,15 +888,21 @@ function applyAdminUI(){
 document.getElementById('pinBtn').onclick=async ()=>{
   const current = prompt('PIN actual:');
   if(current===null) return;
-  if(current!==adminPin){ alert('PIN actual incorrecto.'); return; }
+  const currentHash = await sha256Hex(current.trim());
+  // Compatibilidad: si el PIN todavía estaba guardado en texto plano de una
+  // versión anterior, también lo aceptamos aquí y lo migramos a hash abajo.
+  if(currentHash!==adminPin && current.trim()!==adminPin){
+    alert('PIN actual incorrecto.');
+    return;
+  }
   const nuevo = prompt('Nuevo PIN de entrenador/a:');
   if(!nuevo) return;
-  adminPin = nuevo.trim();
+  adminPin = await sha256Hex(nuevo.trim());
   await save(SKEY.pin, adminPin);
   alert('PIN actualizado.');
 };
 
-document.getElementById('adminToggle').onclick=()=>{
+document.getElementById('adminToggle').onclick=async ()=>{
   if(isAdmin){
     isAdmin = false;
     applyAdminUI();
@@ -874,8 +910,16 @@ document.getElementById('adminToggle').onclick=()=>{
   }
   const entered = prompt('Introduce el PIN de entrenador/a para poder editar datos:');
   if(entered===null) return;
-  if(entered === adminPin){
+  const enteredHash = await sha256Hex(entered.trim());
+  if(enteredHash === adminPin){
     isAdmin = true;
+    applyAdminUI();
+  } else if(entered.trim() === adminPin){
+    // PIN antiguo guardado en texto plano (versión anterior de la web):
+    // se acepta una única vez y se migra automáticamente a hash.
+    isAdmin = true;
+    adminPin = enteredHash;
+    await save(SKEY.pin, adminPin);
     applyAdminUI();
   } else {
     alert('PIN incorrecto.');
@@ -961,7 +1005,7 @@ async function init(){
   players = data.players && data.players.length ? data.players : defaultPlayers();
   matches = data.matches || [];
   trainings = data.trainings || [];
-  adminPin = data.pin || DEFAULT_PIN;
+  adminPin = data.pin || await sha256Hex(DEFAULT_PIN);
   if(!data.players){ await save(SKEY.players, players); }
   if(!data.pin){ await save(SKEY.pin, adminPin); }
   applyAdminUI();
