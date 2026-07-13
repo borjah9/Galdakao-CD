@@ -383,11 +383,12 @@ function playerStats(pid, filter){
   });
   const teamGoals = scoped.reduce((sum,m)=> sum + Object.values(m.stats).reduce((a,s)=>a+(+s.goals||0),0), 0);
   const participacion = teamGoals>0 ? Math.round(((goles+asist)/teamGoals)*100) : 0;
+  const asistPartidos = scoped.length ? Math.round((jugados/scoped.length)*100) : 0;
   return { jugados, partes, goles, asist, encaj, autogoles,
     golesPP: jugados? (goles/jugados).toFixed(2):'—',
     asistPP: jugados? (asist/jugados).toFixed(2):'—',
     participacionPP: jugados? (((goles+asist)/jugados)).toFixed(2):'—',
-    participacion };
+    participacion, asistPartidos, totalConvocatorias: scoped.length };
 }
 function trainingStats(pid){
   let asistidos=0, faltasJust=0, faltas=0;
@@ -602,6 +603,7 @@ function renderStats(){
     board('Máximos asistentes','ASIST.', rows, r=>r.st.asist);
     board('Más participativos en gol','%', rows, r=>r.st.participacion, '%');
     boardDual('Más partidos jugados','PJ · PARTES', rows, r=>r.st.jugados, r=>r.st.partes);
+    board('Mejor asistencia a partidos','%', rows, r=>r.st.asistPartidos, '%');
 
     const gkRows = rows.filter(r=>r.st.encaj>0);
     if(gkRows.length) board('Goles encajados de portero','ENC.', gkRows, r=>r.st.encaj);
@@ -650,7 +652,7 @@ function openPlayerModal(pid){
       ${isNew? '' : `
       <label style="margin-top:18px;">Estadísticas de temporada</label>
       <table class="stat-table">
-        <tr><td class="pname">Partidos jugados</td><td class="mono">${st.jugados}</td></tr>
+        <tr><td class="pname">Partidos jugados</td><td class="mono">${st.jugados}/${st.totalConvocatorias} (${st.asistPartidos}%)</td></tr>
         <tr><td class="pname">Goles</td><td class="mono">${st.goles} (${st.golesPP}/partido)</td></tr>
         <tr><td class="pname">Asistencias</td><td class="mono">${st.asist} (${st.asistPP}/partido)</td></tr>
         <tr><td class="pname">Partes jugadas</td><td class="mono">${st.partes}</td></tr>
@@ -991,7 +993,7 @@ function exportToExcel(){
       'Dorsal': p.number, 'Jugador': p.name, 'Jugados': st.jugados, 'Goles': st.goles,
       'Goles/Partido': st.golesPP, 'Asistencias': st.asist, 'Asist./Partido': st.asistPP,
       'Partes': st.partes, 'Encajados (portero)': st.encaj, 'En propia puerta': st.autogoles,
-      'Participación gol %': st.participacion
+      'Participación gol %': st.participacion, 'Asistencia a partidos %': st.asistPartidos
     };
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(partidosRows), 'Partidos - Totales');
