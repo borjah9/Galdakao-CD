@@ -12,7 +12,7 @@
   --paper:#f5f4ef;
   --card:#ffffff;
   --stripe:#1b1e23;
-  --gold:#d9a441;
+  --gold:#4a90d9;
   --green:#2f6b4f;
   --red:#b8433a;
   --line:#e1ddd2;
@@ -56,13 +56,13 @@ header.top::after{
 .top-row{display:flex; align-items:center; gap:14px; justify-content:space-between;}
 .top-left{display:flex; align-items:center; gap:14px;}
 .top-text h1{font-size:34px; line-height:0.85; margin:0 0 2px; color:#fff;}
-.top-text p{margin:0; font-size:13px; letter-spacing:0.08em; text-transform:uppercase; color:#d8b96f; font-weight:600;}
+.top-text p{margin:0; font-size:13px; letter-spacing:0.08em; text-transform:uppercase; color:#9cc4f0; font-weight:600;}
 .top-right{display:flex; align-items:center; gap:8px;}
 .icon-btn{
   background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.25); color:#fff;
   border-radius:8px; padding:8px 10px; font-size:16px; cursor:pointer; line-height:1;
 }
-.icon-btn.locked{ color:#d8b96f; border-color:#d8b96f; }
+.icon-btn.locked{ color:#9cc4f0; border-color:#9cc4f0; }
 .icon-btn.unlocked{ background:var(--green); border-color:var(--green); }
 #modeLabel{ font-size:9.5px; letter-spacing:.05em; text-transform:uppercase; color:#c9c6bc; font-weight:700; display:block; text-align:right; margin-bottom:3px;}
 
@@ -192,7 +192,7 @@ table.stat-table{ width:100%; border-collapse:collapse; margin-top:10px; font-si
 .table-scroll table.stat-table{ margin-top:0; min-width:560px; }
 .table-scroll table.stat-table th, .table-scroll table.stat-table td{ text-align:center; white-space:nowrap; padding:8px 8px;}
 .table-scroll table.stat-table td.pname{ text-align:left; }
-.table-scroll table.stat-table tbody tr:nth-child(1) td{ background:rgba(217,164,65,0.12); }
+.table-scroll table.stat-table tbody tr:nth-child(1) td{ background:rgba(74,144,217,0.12); }
 table.stat-table th{ text-align:left; font-size:9.5px; text-transform:uppercase; color:var(--muted); padding:5px 4px; border-bottom:1px solid var(--line); font-weight:700;}
 table.stat-table td{ padding:6px 4px; border-bottom:1px solid var(--line); vertical-align:middle;}
 table.stat-table td.pname{ font-weight:700; font-size:13px;}
@@ -230,7 +230,7 @@ table.stat-table select{ padding:4px 2px; font-size:12px; width:62px;}
 .res.g{ background:var(--green); color:#fff; border-color:var(--green); }
 .res.e{ background:var(--gold); color:var(--ink); border-color:var(--gold); }
 .res.p{ background:var(--red); color:#fff; border-color:var(--red); }
-.cal-row.next{ background:rgba(217,164,65,0.12); }
+.cal-row.next{ background:rgba(74,144,217,0.12); }
 .rival-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin-bottom:16px; }
 .rival-card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; box-shadow:var(--shadow); }
 .rival-card .n{ font-weight:800; font-size:14.5px; }
@@ -261,7 +261,7 @@ textarea{ width:100%; padding:9px 11px; border:1px solid var(--line); border-rad
       <img class="crest" id="crestImg" src="" alt="Escudo Galdakao C.D.">
       <div class="top-text">
         <h1>Galdakao C.D.</h1>
-        <p>Benjamín Beltza · Temporada 26/27</p>
+        <p>Benjamín Beltza 2017 · Temporada 26/27</p>
       </div>
     </div>
     <div class="top-right">
@@ -584,7 +584,7 @@ function renderEvoChart(){
   // así que se ofrece como dato de equipo para el cuerpo técnico.
   const datasets = [
     { label:'Goles acumulados', data:golesAcum, borderColor:'#16181c', backgroundColor:'rgba(22,24,28,0.06)', borderWidth:2.5, tension:0.25, fill:true, pointRadius:3, pointBackgroundColor:'#16181c' },
-    { label:'Asistencias acumuladas', data:asistAcum, borderColor:'#d9a441', backgroundColor:'rgba(217,164,65,0.08)', borderWidth:2.5, tension:0.25, fill:true, pointRadius:3, pointBackgroundColor:'#d9a441' }
+    { label:'Asistencias acumuladas', data:asistAcum, borderColor:'#4a90d9', backgroundColor:'rgba(74,144,217,0.08)', borderWidth:2.5, tension:0.25, fill:true, pointRadius:3, pointBackgroundColor:'#4a90d9' }
   ];
   if(sel==='__team__'){
     datasets.push({ label:'Goles encajados (equipo)', data:encajAcum, borderColor:'#b8433a', backgroundColor:'rgba(184,67,58,0.07)', borderWidth:2.5, tension:0.25, fill:true, pointRadius:3, pointBackgroundColor:'#b8433a' });
@@ -865,7 +865,7 @@ function openMatchModal(mid){
         <tr><th>Tramo</th><th>Sistema</th><th>A favor</th><th>En contra</th></tr>
         ${[0,1,2].map(i=>{ const t=(m.tramos||[])[i]||{}; return `<tr data-tramo="${i}">
           <td class="pname">${i+1}º</td>
-          <td><select class="t-sis" ${dis}>${['','1-1-3-2','1-2-3-1','1-3-2-1','1-2-2-2','Otro'].map(o=>`<option value="${o}" ${(t.sistema||'')===o?'selected':''}>${o||'—'}</option>`).join('')}</select></td>
+          <td><select class="t-sis" ${dis}>${['','1-1-3-2','1-2-3-1','1-3-2-1','1-3-1-2','1-2-2-2','Otro'].map(o=>`<option value="${o}" ${(t.sistema||'')===o?'selected':''}>${o||'—'}</option>`).join('')}</select></td>
           <td><input type="number" min="0" class="t-gf" value="${t.gf??''}" ${dis}></td>
           <td><input type="number" min="0" class="t-gc" value="${t.gc??''}" ${dis}></td>
         </tr>`; }).join('')}
@@ -1062,6 +1062,33 @@ document.getElementById('fabAdd').onclick=()=>{
 let isAdmin = false;
 let adminPin = DEFAULT_PIN;
 
+// Pide el PIN en una ventana propia con el texto oculto (en vez de prompt(),
+// que lo muestra a la vista). Devuelve el texto o null si se cancela.
+function askPin(title){
+  return new Promise(resolve=>{
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `<div class="overlay" style="align-items:center;">
+      <div class="modal" style="max-width:340px; border-radius:16px;">
+        <div class="modal-head"><h3>${title}</h3><button class="x" type="button" data-a="x">&times;</button></div>
+        <input type="password" inputmode="numeric" autocomplete="off" id="pinInput" style="font-size:22px; letter-spacing:.3em; text-align:center;">
+        <div class="footer-actions">
+          <button class="btn secondary" type="button" data-a="x">Cancelar</button>
+          <button class="btn gold" type="button" data-a="ok">Aceptar</button>
+        </div>
+      </div></div>`;
+    document.body.appendChild(wrap);
+    const input = wrap.querySelector('#pinInput');
+    const done = (v)=>{ wrap.remove(); resolve(v); };
+    wrap.addEventListener('click', e=>{
+      const a = e.target.dataset.a;
+      if(a==='ok') done(input.value);
+      else if(a==='x' || e.target.classList.contains('overlay')) done(null);
+    });
+    input.addEventListener('keydown', e=>{ if(e.key==='Enter') done(input.value); if(e.key==='Escape') done(null); });
+    setTimeout(()=>input.focus(), 50);
+  });
+}
+
 function applyAdminUI(){
   const toggle = document.getElementById('adminToggle');
   const label = document.getElementById('modeLabel');
@@ -1074,7 +1101,7 @@ function applyAdminUI(){
   if(typeof renderLiga === 'function') renderLiga();
 }
 document.getElementById('pinBtn').onclick=async ()=>{
-  const current = prompt('PIN actual:');
+  const current = await askPin('PIN actual');
   if(current===null) return;
   const currentHash = await sha256Hex(current.trim());
   // Compatibilidad: si el PIN todavía estaba guardado en texto plano de una
@@ -1083,7 +1110,7 @@ document.getElementById('pinBtn').onclick=async ()=>{
     alert('PIN actual incorrecto.');
     return;
   }
-  const nuevo = prompt('Nuevo PIN de entrenador/a:');
+  const nuevo = await askPin('Nuevo PIN');
   if(!nuevo) return;
   adminPin = await sha256Hex(nuevo.trim());
   await save(SKEY.pin, adminPin);
@@ -1097,7 +1124,7 @@ document.getElementById('adminToggle').onclick=async ()=>{
     return;
   }
   if(loadFailed){ alert('Los datos no se cargaron bien. Recarga la página antes de entrar en modo entrenador.'); return; }
-  const entered = prompt('Introduce el PIN de entrenador/a para poder editar datos:');
+  const entered = await askPin('PIN de entrenador/a');
   if(entered===null) return;
   const enteredHash = await sha256Hex(entered.trim());
   if(enteredHash === adminPin){
@@ -1231,6 +1258,32 @@ function exportToExcel(){
     });
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(concededRows), 'Goles en contra');
+
+  // Tramos de cada partido (datos opcionales) y resumen por sistema y por tramo.
+  const tramoRows = [];
+  const bySis = {}, byTramo = [0,1,2].map(()=>({n:0,gf:0,gc:0}));
+  matches.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(m=>{
+    (m.tramos||[]).forEach((t,i)=>{
+      if(!t || ((t.gf===''||t.gf==null) && (t.gc===''||t.gc==null) && !t.sistema)) return;
+      tramoRows.push({ 'Fecha': fmtDate(m.date), 'Rival': m.rival, 'Competición': m.competition,
+        'Tramo': (i+1)+'º', 'Sistema': t.sistema||'', 'A favor': t.gf, 'En contra': t.gc });
+      if(t.gf===''||t.gf==null||t.gc===''||t.gc==null) return;
+      const k = t.sistema || 'Sin indicar';
+      bySis[k] = bySis[k] || {n:0,gf:0,gc:0}; bySis[k].n++; bySis[k].gf+=+t.gf; bySis[k].gc+=+t.gc;
+      if(byTramo[i]){ byTramo[i].n++; byTramo[i].gf+=+t.gf; byTramo[i].gc+=+t.gc; }
+    });
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(tramoRows.length? tramoRows : [{'Aviso':'Sin tramos registrados todavía'}]), 'Tramos');
+  const resumen = (name,r)=>({ '': name, 'Tramos': r.n, 'A favor': r.gf, 'En contra': r.gc, 'Diferencia': r.gf-r.gc,
+    'A favor/tramo': r.n? +(r.gf/r.n).toFixed(2):'', 'En contra/tramo': r.n? +(r.gc/r.n).toFixed(2):'' });
+  const resumenRows = [
+    ...Object.entries(bySis).map(([k,r])=>resumen('Sistema '+k, r)),
+    ...byTramo.map((r,i)=>[i,r]).filter(([,r])=>r.n).map(([i,r])=>resumen((i+1)+'º tramo', r))
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumenRows.length? resumenRows : [{'Aviso':'Sin tramos registrados todavía'}]), 'Resumen tramos');
+  const notasRows = matches.slice().sort((a,b)=>a.date.localeCompare(b.date)).filter(m=>m.notas)
+    .map(m=>({ 'Fecha': fmtDate(m.date), 'Rival': m.rival, 'Competición': m.competition, 'Notas': m.notas }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(notasRows.length? notasRows : [{'Aviso':'Sin notas todavía'}]), 'Notas de partidos');
 
   const entrenoRows = players.slice().sort((a,b)=>a.number-b.number).map(p=>{
     const tr = trainingStats(p.id);
