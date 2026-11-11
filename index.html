@@ -213,12 +213,48 @@ table.stat-table select{ padding:4px 2px; font-size:12px; width:62px;}
   border:none; font-size:28px; font-weight:700; box-shadow:0 6px 20px rgba(0,0,0,.25); cursor:pointer;
   font-family:'Teko',sans-serif;
 }
+/* ---------- LIGA (nuevo) ---------- */
+.next-card{ background:var(--stripe); color:#fff; border-radius:12px; padding:16px 18px; margin-bottom:16px; box-shadow:var(--shadow);
+  background-image: repeating-linear-gradient(90deg, #101215 0 14px, #22262c 14px 28px); border-bottom:4px solid var(--gold); }
+.next-card .lbl{ font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--gold); font-weight:700; }
+.next-card .vs{ font-family:'Teko',sans-serif; font-size:30px; line-height:1; margin:6px 0 4px; }
+.next-card .info{ font-size:12.5px; color:#d8d5cc; font-weight:600; }
+.cal-row{ display:flex; align-items:center; gap:10px; padding:10px 14px; border-top:1px solid var(--line); }
+.cal-row:first-child{ border-top:none; }
+.cal-row .j{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted); width:28px; }
+.cal-row .d{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--muted); width:46px; }
+.cal-row .r{ flex:1; font-weight:700; font-size:13.5px; min-width:0; }
+.cal-row .cf{ font-size:10px; font-weight:700; letter-spacing:.04em; padding:2px 6px; border-radius:5px; border:1px solid var(--line); color:var(--muted); }
+.cal-row .cf.casa{ background:var(--ink); color:#fff; border-color:var(--ink); }
+.cal-row .res{ font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:13.5px; min-width:48px; text-align:center; padding:2px 6px; border-radius:6px; border:1px solid var(--line); background:var(--paper); }
+.res.g{ background:var(--green); color:#fff; border-color:var(--green); }
+.res.e{ background:var(--gold); color:var(--ink); border-color:var(--gold); }
+.res.p{ background:var(--red); color:#fff; border-color:var(--red); }
+.cal-row.next{ background:rgba(217,164,65,0.12); }
+.rival-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin-bottom:16px; }
+.rival-card{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; box-shadow:var(--shadow); }
+.rival-card .n{ font-weight:800; font-size:14.5px; }
+.rival-card .s{ font-size:11.5px; color:var(--muted); margin-top:4px; line-height:1.45; }
+.rival-card .s b{ color:var(--ink); }
+.rival-card .iv{ display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+.rival-card .iv span{ font-size:11px; font-weight:700; padding:3px 8px; border-radius:6px; background:var(--paper); border:1px solid var(--line); }
+.lvl{ display:inline-block; font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; padding:2px 7px; border-radius:5px; margin-left:6px; vertical-align:middle; }
+.lvl.fuerte{ background:var(--red); color:#fff; } .lvl.parecido{ background:var(--gold); color:var(--ink); } .lvl.asequible{ background:var(--green); color:#fff; }
+.note-small{ font-size:11.5px; color:var(--muted); margin:-6px 2px 12px; line-height:1.45; }
+.ext-link{ display:inline-block; font-size:12px; font-weight:700; color:var(--ink); margin:0 2px 16px; }
+.alert-bar{ background:var(--red); color:#fff; font-size:13px; font-weight:600; padding:10px 16px; text-align:center; }
+textarea{ width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:8px; font-size:14px; font-family:'Inter',sans-serif; background:#fff; color:var(--ink); min-height:70px; resize:vertical; }
+.tramos-table select{ width:100%; } .tramos-table input[type=number]{ width:48px; }
+.ro-note{ font-size:13px; line-height:1.5; background:#fff; border:1px solid var(--line); border-radius:8px; padding:9px 11px; white-space:pre-wrap; }
+.chart-box{ position:relative; height:280px; }
+@media(min-width:600px){ .chart-box{ height:320px; } }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';document.head.appendChild(s);"></script>
 </head>
 <body>
 
+<div id="loadAlert" class="alert-bar hidden">No se han podido cargar todos los datos. Recarga la página antes de editar: así no se sobrescribe nada.</div>
 <header class="top">
   <div class="top-row">
     <div class="top-left">
@@ -242,6 +278,7 @@ table.stat-table select{ padding:4px 2px; font-size:12px; width:62px;}
 <nav class="tabs">
   <button data-tab="plantilla" class="active">Plantilla</button>
   <button data-tab="partidos">Partidos</button>
+  <button data-tab="liga">Liga</button>
   <button data-tab="entrenos">Entrenos</button>
   <button data-tab="stats">Clasificación</button>
 </nav>
@@ -258,6 +295,17 @@ table.stat-table select{ padding:4px 2px; font-size:12px; width:62px;}
   <section id="tab-partidos" class="hidden">
     <div class="section-head"><h2>Partidos</h2><span class="sub" id="partidosCount"></span></div>
     <div id="matchesList"></div>
+  </section>
+
+  <!-- LIGA (calendario oficial + rivales) -->
+  <section id="tab-liga" class="hidden">
+    <div class="section-head"><h2>Liga</h2><span class="sub">Benjamín Liga B · Grupo 2</span></div>
+    <div id="nextMatch"></div>
+    <div class="board"><div class="board-head">Calendario<span>18 jornadas</span></div><div id="calendarList"></div></div>
+    <a class="ext-link" href="https://www.fvf-bff.eus/pnfg/NPcd/NFG_VisClasificacion?cod_primaria=1000120&codcompeticion=24968783&codgrupo=25215103" target="_blank" rel="noopener">Ver clasificación oficial en la Federación ↗</a>
+    <div class="section-head" style="margin-top:6px;"><h2>Rivales</h2><span class="sub">Temporada pasada</span></div>
+    <p class="note-small" id="rivalNote"></p>
+    <div class="rival-grid" id="rivalGrid"></div>
   </section>
 
   <!-- ENTRENOS -->
@@ -284,7 +332,7 @@ table.stat-table select{ padding:4px 2px; font-size:12px; width:62px;}
         <select id="evoSelect" style="max-width:180px;"></select>
       </div>
       <div id="evoEmpty" class="empty hidden" style="border:none;"><b>Todavía sin partidos</b>La gráfica aparecerá cuando registres el primer partido.</div>
-      <canvas id="evoChart" height="180"></canvas>
+      <div class="chart-box"><canvas id="evoChart"></canvas></div>
     </div>
 
     <div id="statsMainTable"></div>
@@ -337,17 +385,25 @@ async function sha256Hex(text){
   const hashBuffer = await crypto.subtle.digest('SHA-256', bytes);
   return Array.from(new Uint8Array(hashBuffer)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
+// Si algún dato no se puede leer (por ejemplo, un corte de conexión), la web
+// NO guarda nada: así nunca se sobrescriben los datos buenos con datos vacíos.
+let loadFailed = false;
 async function loadAll(){
-  const out = {};
+  const out = { missing:{} };
   for (const [k,key] of Object.entries(SKEY)){
     try{
       const snap = await getDoc(doc(db, COLLECTION, key));
       out[k] = snap.exists() ? JSON.parse(snap.data().value) : null;
-    }catch(e){ console.error('load error', key, e); out[k]=null; }
+      out.missing[k] = !snap.exists();
+    }catch(e){ console.error('load error', key, e); out[k]=null; out.missing[k]=false; loadFailed = true; }
   }
   return out;
 }
 async function save(key, value){
+  if(loadFailed){
+    alert('No se guarda nada porque los datos no se cargaron bien. Recarga la página e inténtalo de nuevo.');
+    return;
+  }
   try{ await setDoc(doc(db, COLLECTION, key), { value: JSON.stringify(value) }); }
   catch(e){ console.error('storage error',e); alert('No se pudo guardar: revisa la conexión o la configuración de Firebase.'); }
 }
@@ -443,11 +499,17 @@ function renderMatches(){
         <div class="rival">vs ${m.rival||'—'}</div>
         <div class="result">${m.golesFor ?? golesEquipo} - ${golesAgainst}</div>
       </div>
-      <div class="meta">${fmtDate(m.date)} · ${m.competition||'Liga'}${m.captain? ' · Capitán/a: '+ (players.find(p=>p.id===m.captain)?.name||'') : ''}</div>`;
+      <div class="meta">${fmtDate(m.date)} · ${m.competition||'Liga'}${m.captain? ' · Capitán/a: '+ (players.find(p=>p.id===m.captain)?.name||'') : ''}</div>
+      ${tramosResumen(m)? `<div class="meta">Tramos: ${tramosResumen(m)}</div>` : ''}`;
     card.onclick=()=>openMatchModal(m.id);
     list.appendChild(card);
   });
 }
+function tramosResumen(m){
+  const t = (m.tramos||[]).filter(x=> x && (x.gf!=='' && x.gf!=null || x.gc!=='' && x.gc!=null));
+  return t.map(x=> `${x.gf??'?'}-${x.gc??'?'}`).join(' · ');
+}
+function esc(t){ return String(t??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function fmtDate(d){ if(!d) return '—'; const [y,m,day]=d.split('-'); return `${day}/${m}/${y}`; }
 
 /* ---------------- RENDER: TRAININGS ---------------- */
@@ -500,7 +562,8 @@ function renderEvoChart(){
   canvas.classList.remove('hidden');
 
   const sel = document.getElementById('evoSelect').value || '__team__';
-  const labels = sorted.map(m=> fmtDate(m.date) + (m.rival? ' vs '+m.rival : ''));
+  const labels = sorted.map(m=> fmtDate(m.date).slice(0,5));
+  const fullLabels = sorted.map(m=> fmtDate(m.date) + (m.rival? ' vs '+m.rival : ''));
   let goles=0, asist=0, encaj=0;
   const golesAcum=[], asistAcum=[], encajAcum=[];
   sorted.forEach(m=>{
@@ -532,11 +595,12 @@ function renderEvoChart(){
     type:'line',
     data:{ labels, datasets },
     options:{
-      responsive:true,
+      responsive:true, maintainAspectRatio:false,
       interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ position:'bottom', labels:{ font:{ family:'Inter', size:11, weight:'600' }, boxWidth:12 } } },
+      plugins:{ legend:{ position:'bottom', labels:{ font:{ family:'Inter', size:12, weight:'600' }, boxWidth:12 } },
+        tooltip:{ callbacks:{ title:(items)=> fullLabels[items[0].dataIndex] } } },
       scales:{
-        x:{ ticks:{ font:{ family:'IBM Plex Mono', size:9 }, maxRotation:45, minRotation:45 }, grid:{ display:false } },
+        x:{ ticks:{ font:{ family:'IBM Plex Mono', size:11 }, maxRotation:0, autoSkip:true }, grid:{ display:false } },
         y:{ beginAtZero:true, ticks:{ precision:0, font:{ family:'IBM Plex Mono', size:10 } }, grid:{ color:'#e1ddd2' } }
       }
     }
@@ -595,9 +659,56 @@ function renderStats(){
       `</tbody></table></div>`;
     root.appendChild(el);
   }
+  // Estadísticas de tramos: usan los datos opcionales «Resultado por tramos»
+  // y «¿Cómo fue?» de cada partido. Solo leen datos, no guardan nada.
+  function tramosBlock(){
+    const scoped = matchesByComp(statsCompFilter);
+    const bySis = {}, byTramo = [0,1,2].map(()=>({n:0,gf:0,gc:0}));
+    scoped.forEach(m=>{
+      (m.tramos||[]).forEach((t,i)=>{
+        if(!t || t.gf==='' || t.gf==null || t.gc==='' || t.gc==null) return;
+        const gf=+t.gf, gc=+t.gc;
+        if(byTramo[i]){ byTramo[i].n++; byTramo[i].gf+=gf; byTramo[i].gc+=gc; }
+        const k = t.sistema || 'Sin indicar';
+        bySis[k] = bySis[k] || {n:0,gf:0,gc:0};
+        bySis[k].n++; bySis[k].gf+=gf; bySis[k].gc+=gc;
+      });
+    });
+    const avg = (a,n)=> n? (a/n).toFixed(1).replace('.',',') : '—';
+    const dif = (r)=> (r.gf-r.gc>0?'+':'')+(r.gf-r.gc);
+    const tableOf = (rows)=> `<div class="table-scroll"><table class="stat-table" style="min-width:420px;"><thead><tr>
+        <th></th><th>Tramos</th><th>A favor</th><th>En contra</th><th>Dif.</th><th>A favor/tramo</th><th>En contra/tramo</th></tr></thead><tbody>`+
+      rows.map(([name,r])=>`<tr><td class="pname">${esc(name)}</td><td>${r.n}</td><td>${r.gf}</td><td>${r.gc}</td><td>${dif(r)}</td><td>${avg(r.gf,r.n)}</td><td>${avg(r.gc,r.n)}</td></tr>`).join('')+
+      `</tbody></table></div>`;
+    const total = byTramo.reduce((a,r)=>a+r.n,0);
+    const el1 = document.createElement('div'); el1.className='board';
+    if(!total){
+      el1.innerHTML = `<div class="board-head">Rendimiento por tramos<span>TRAMOS</span></div>
+        <div style="padding:12px 14px; font-size:12.5px; color:var(--muted);">Rellena «Resultado por tramos» en los partidos para ver aquí qué sistema y qué tramo os funcionan mejor.</div>`;
+      root.appendChild(el1); return;
+    }
+    el1.innerHTML = `<div class="board-head">Rendimiento por sistema<span>TRAMOS</span></div>` +
+      tableOf(Object.entries(bySis).sort((a,b)=>b[1].n-a[1].n));
+    root.appendChild(el1);
+    const el2 = document.createElement('div'); el2.className='board';
+    el2.innerHTML = `<div class="board-head">Rendimiento por tramo<span>1º · 2º · 3º</span></div>` +
+      tableOf(byTramo.map((r,i)=>[(i+1)+'º tramo', r]).filter(([,r])=>r.n));
+    root.appendChild(el2);
+    const notes = [];
+    scoped.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(m=>
+      (m.concededGoals||[]).forEach(g=>{ if(g.como) notes.push({m,g}); }));
+    if(notes.length){
+      const el3 = document.createElement('div'); el3.className='board';
+      el3.innerHTML = `<div class="board-head">Cómo nos marcaron<span>${notes.length} ${notes.length===1?'GOL':'GOLES'}</span></div>` +
+        notes.map(({m,g})=>`<div class="board-row"><div class="pos" style="width:44px;">${fmtDate(m.date).slice(0,5)}</div><div class="pname" style="font-weight:600;">${esc(g.como)}<div style="font-size:11px; color:var(--muted); font-weight:600;">vs ${esc(m.rival||'—')}</div></div></div>`).join('');
+      root.appendChild(el3);
+    }
+  }
+
   if(!matches.length && !trainings.length){
     root.innerHTML = `<div class="empty"><b>Todavía no hay datos</b>Añade partidos y entrenamientos para ver las clasificaciones.</div>`;
   } else {
+    tramosBlock();
     participationTable();
     board('Máximos goleadores','GOLES', rows, r=>r.st.goles);
     board('Máximos asistentes','ASIST.', rows, r=>r.st.asist);
@@ -749,6 +860,22 @@ function openMatchModal(mid){
         ${rowsHtml}
       </table>
 
+      <label style="margin-top:18px;">Resultado por tramos</label>
+      <table class="stat-table tramos-table">
+        <tr><th>Tramo</th><th>Sistema</th><th>A favor</th><th>En contra</th></tr>
+        ${[0,1,2].map(i=>{ const t=(m.tramos||[])[i]||{}; return `<tr data-tramo="${i}">
+          <td class="pname">${i+1}º</td>
+          <td><select class="t-sis" ${dis}>${['','1-1-3-2','1-2-3-1','1-3-2-1','1-2-2-2','Otro'].map(o=>`<option value="${o}" ${(t.sistema||'')===o?'selected':''}>${o||'—'}</option>`).join('')}</select></td>
+          <td><input type="number" min="0" class="t-gf" value="${t.gf??''}" ${dis}></td>
+          <td><input type="number" min="0" class="t-gc" value="${t.gc??''}" ${dis}></td>
+        </tr>`; }).join('')}
+      </table>
+
+      <label style="margin-top:18px;">Notas del partido</label>
+      ${ro? `<div class="ro-note">${esc(m.notas)||'Sin notas.'}</div>`
+          : `<textarea id="m-notas" placeholder="Cómo fueron los goles a favor, qué funcionó, qué trabajar...">${esc(m.notas)}</textarea>
+             <div class="note-small" style="margin:6px 2px 0;">Las notas las puede leer cualquiera que abra la web: no escribas valoraciones de jugadores.</div>`}
+
       <label style="margin-top:18px; display:flex; justify-content:space-between; align-items:center;">
         <span>Goles en contra <span class="mono" id="concededCount" style="color:var(--ink); font-weight:700;"></span></span>
       </label>
@@ -785,6 +912,7 @@ function openMatchModal(mid){
           ${players.map(p=>`<option value="${p.id}" ${g.autor===p.id?'selected':''}>${p.number}. ${p.name}</option>`).join('')}
         </select>
         ${isAdmin? `<button class="btn danger small cg-del" type="button">✕</button>` : ''}
+        <input type="text" class="cg-como" style="flex-basis:100%;" placeholder="¿Cómo fue? (p. ej. contra por la izquierda)" value="${esc(g.como)}" ${dis}>
       </div>`).join('');
   }
   renderConceded();
@@ -796,6 +924,7 @@ function openMatchModal(mid){
     if(e.target.classList.contains('cg-portero')) concededDraft[i].portero = e.target.value;
     if(e.target.classList.contains('cg-own')){ concededDraft[i].ownGoal = e.target.checked; renderConceded(); }
     if(e.target.classList.contains('cg-autor')) concededDraft[i].autor = e.target.value;
+    if(e.target.classList.contains('cg-como')) concededDraft[i].como = e.target.value.trim();
   });
   concList.addEventListener('click', (e)=>{
     if(e.target.classList.contains('cg-del')){
@@ -817,7 +946,7 @@ function openMatchModal(mid){
     if(confirm('¿Eliminar este partido? Esta acción no se puede deshacer.')){
       matches = matches.filter(x=>x.id!==m.id);
       await save(SKEY.matches, matches);
-      closeModal(); renderMatches(); renderRoster(); renderStats();
+      closeModal(); renderMatches(); renderRoster(); renderStats(); renderLiga();
     }
   };
   if(isAdmin) document.getElementById('saveBtn').onclick=async ()=>{
@@ -837,9 +966,16 @@ function openMatchModal(mid){
       };
     });
     m.concededGoals = concededDraft.filter(g=>g.portero);
+    const tramos = [...document.querySelectorAll('#modalRoot tr[data-tramo]')].map(tr=>{
+      const gf = tr.querySelector('.t-gf').value, gc = tr.querySelector('.t-gc').value;
+      return { sistema: tr.querySelector('.t-sis').value, gf: gf===''? '' : +gf, gc: gc===''? '' : +gc };
+    });
+    if(tramos.some(t=> t.sistema || t.gf!=='' || t.gc!=='') || m.tramos) m.tramos = tramos;
+    const notas = (document.getElementById('m-notas')?.value || '').trim();
+    if(notas || m.notas) m.notas = notas;
     if(isNew) matches.push(m);
     await save(SKEY.matches, matches);
-    closeModal(); renderMatches(); renderRoster(); renderStats();
+    closeModal(); renderMatches(); renderRoster(); renderStats(); renderLiga();
   };
 }
 
@@ -905,14 +1041,14 @@ function openTrainingModal(tid){
 
 /* ---------------- TABS ---------------- */
 const tabButtons = document.querySelectorAll('nav.tabs button');
-const sections = { plantilla:'tab-plantilla', partidos:'tab-partidos', entrenos:'tab-entrenos', stats:'tab-stats' };
+const sections = { plantilla:'tab-plantilla', partidos:'tab-partidos', liga:'tab-liga', entrenos:'tab-entrenos', stats:'tab-stats' };
 let currentTab = 'plantilla';
 tabButtons.forEach(btn=>{
   btn.onclick=()=>{
     currentTab = btn.dataset.tab;
     tabButtons.forEach(b=>b.classList.toggle('active', b===btn));
     Object.entries(sections).forEach(([k,id])=> document.getElementById(id).classList.toggle('hidden', k!==currentTab));
-    document.getElementById('fabAdd').classList.toggle('hidden', !isAdmin || currentTab==='stats');
+    document.getElementById('fabAdd').classList.toggle('hidden', !isAdmin || currentTab==='stats' || currentTab==='liga');
   };
 });
 document.getElementById('fabAdd').onclick=()=>{
@@ -933,8 +1069,9 @@ function applyAdminUI(){
   toggle.classList.toggle('locked', !isAdmin);
   toggle.classList.toggle('unlocked', isAdmin);
   label.textContent = isAdmin ? 'Modo entrenador' : 'Solo lectura';
-  document.getElementById('fabAdd').classList.toggle('hidden', !isAdmin || currentTab==='stats');
+  document.getElementById('fabAdd').classList.toggle('hidden', !isAdmin || currentTab==='stats' || currentTab==='liga');
   document.getElementById('pinBtn').classList.toggle('hidden', !isAdmin);
+  if(typeof renderLiga === 'function') renderLiga();
 }
 document.getElementById('pinBtn').onclick=async ()=>{
   const current = prompt('PIN actual:');
@@ -959,6 +1096,7 @@ document.getElementById('adminToggle').onclick=async ()=>{
     applyAdminUI();
     return;
   }
+  if(loadFailed){ alert('Los datos no se cargaron bien. Recarga la página antes de entrar en modo entrenador.'); return; }
   const entered = prompt('Introduce el PIN de entrenador/a para poder editar datos:');
   if(entered===null) return;
   const enteredHash = await sha256Hex(entered.trim());
@@ -976,6 +1114,72 @@ document.getElementById('adminToggle').onclick=async ()=>{
     alert('PIN incorrecto.');
   }
 };
+
+/* ---------------- LIGA: CALENDARIO Y RIVALES ----------------
+   Datos fijos sacados de la web de la Federación (Benjamín Liga B, Grupo 2,
+   temporada 2026-27). No se guardan en la base de datos: si cambia algo,
+   se edita aquí. Los resultados se cogen de los partidos de Liga que
+   registras en la pestaña Partidos (mismo día que la jornada). */
+const LIGA_CAL = [
+  [1,'2026-11-07','IKASTXIKI KAÑOMETA',false],[2,'2026-11-14','IKASTXIKI URREMENDI',true],
+  [3,'2026-11-21','SD Umore Ona Urdina',true],[4,'2026-11-28','MORAZA B',false],
+  [5,'2026-12-12','SD BEGOÑA BENJAMIN 2017 B',true],[6,'2026-12-19','CD ELORRIO BENJAMIN 17-18',false],
+  [7,'2027-01-16','ARRATIA 17B',true],[8,'2027-01-23','Loiola Indautxu 17B',false],
+  [9,'2027-01-30','SAN PELAYO 2017 ERMUA CD',true],[10,'2027-02-13','IKASTXIKI KAÑOMETA',true],
+  [11,'2027-02-20','IKASTXIKI URREMENDI',false],[12,'2027-02-27','SD Umore Ona Urdina',false],
+  [13,'2027-03-06','MORAZA B',true],[14,'2027-03-13','SD BEGOÑA BENJAMIN 2017 B',false],
+  [15,'2027-04-10','CD ELORRIO BENJAMIN 17-18',true],[16,'2027-04-17','ARRATIA 17B',false],
+  [17,'2027-04-24','Loiola Indautxu 17B',true],[18,'2027-05-08','SAN PELAYO 2017 ERMUA CD',false]
+].map(([j,date,rival,casa])=>({j,date,rival,casa}));
+// Temporada 2025-26 de cada rival (clasificación final en la Federación) y
+// nivel estimado por el cuerpo técnico (solo se ve en modo entrenador).
+const RIVALES = {
+  'IKASTXIKI KAÑOMETA':        { prev:'IKASTXIKI KAÑOMETA', liga:'Liga D · Grupo 10', pos:'3º de 9', pts:27, gf:51, gc:53, nivel:'asequible' },
+  'IKASTXIKI URREMENDI':       { prev:'IKASTXIKI URREMENDI', liga:'Liga D · Grupo 10', pos:'5º de 9', pts:20, gf:43, gc:41, nivel:'asequible' },
+  'SD Umore Ona Urdina':       { prev:'SD Umore Ona Urdina', liga:'Liga B · Grupo 8 (2016)', pos:'3º de 9', pts:38, gf:93, gc:36, nivel:'fuerte' },
+  'MORAZA B':                  { prev:'MORAZA B', liga:'Liga B · Grupo 9 (2016)', pos:'7º de 9', pts:15, gf:57, gc:92, nivel:'parecido' },
+  'SD BEGOÑA BENJAMIN 2017 B': { prev:'BEGOÑA BENJAMIN 17 B', liga:'Liga B · Grupo 16', pos:'9º de 10', pts:9, gf:40, gc:97, nivel:'parecido' },
+  'CD ELORRIO BENJAMIN 17-18': { prev:'CD ELORRIO 17 BELTZA', liga:'Liga B · Grupo 11', pos:'9º de 10', pts:10, gf:56, gc:144, nivel:'parecido' },
+  'ARRATIA 17B':               { prev:'ARRATIA 17B', liga:'Liga B · Grupo 14', pos:'4º de 9', pts:26, gf:83, gc:73, nivel:'parecido' },
+  'Loiola Indautxu 17B':       { prev:'Loiola Indautxu 17B', liga:'Liga B · Grupo 16', pos:'3º de 10', pts:40, gf:113, gc:61, nivel:'fuerte' },
+  'SAN PELAYO 2017 ERMUA CD':  { prev:'Ermua CD San Pelayo 2017', liga:'Liga B · Grupo 11', pos:'6º de 10', pts:22, gf:72, gc:104, nivel:'parecido' }
+};
+function ligaMatchFor(j){
+  return matches.find(m=> (m.competition||'Liga')==='Liga' && m.date===j.date) || null;
+}
+function ligaResult(m){
+  if(!m) return null;
+  const gf = m.golesFor!=='' && m.golesFor!=null ? +m.golesFor : Object.values(m.stats||{}).reduce((a,s)=>a+(+s.goals||0),0);
+  const gc = (m.concededGoals||[]).length;
+  return { gf, gc, cls: gf>gc?'g':(gf<gc?'p':'e') };
+}
+function renderLiga(){
+  const cal = document.getElementById('calendarList'); if(!cal) return;
+  const today = new Date().toISOString().slice(0,10);
+  const next = LIGA_CAL.find(j=> j.date>=today && !ligaMatchFor(j));
+  const nm = document.getElementById('nextMatch');
+  nm.innerHTML = next ? `<div class="next-card"><div class="lbl">Próximo partido · Jornada ${next.j}</div>
+      <div class="vs">${next.casa? 'Galdakao vs '+esc(next.rival) : esc(next.rival)+' vs Galdakao'}</div>
+      <div class="info">${fmtDate(next.date)} · ${next.casa? 'En casa':'Fuera'}</div></div>` : '';
+  cal.innerHTML = LIGA_CAL.map(j=>{
+    const r = ligaResult(ligaMatchFor(j));
+    return `<div class="cal-row ${next && next.j===j.j?'next':''}">
+      <span class="j">J${j.j}</span><span class="d">${fmtDate(j.date).slice(0,5)}</span>
+      <span class="r">${esc(j.rival)}</span>
+      <span class="cf ${j.casa?'casa':''}">${j.casa?'CASA':'FUERA'}</span>
+      <span class="res ${r? r.cls:''}">${r? r.gf+'-'+r.gc : '—'}</span></div>`;
+  }).join('');
+  document.getElementById('rivalNote').textContent = isAdmin
+    ? 'Datos de la temporada 2025-26 (Federación). El nivel es una estimación del cuerpo técnico y solo se ve en modo entrenador.'
+    : 'Datos de la temporada 2025-26 según la Federación. En benjamines los equipos cambian mucho de un año a otro.';
+  document.getElementById('rivalGrid').innerHTML = Object.entries(RIVALES).map(([name,d])=>{
+    const js = LIGA_CAL.filter(j=>j.rival===name);
+    const iv = js.map(j=>{ const r=ligaResult(ligaMatchFor(j)); return `<span>J${j.j} ${j.casa?'casa':'fuera'}: ${r? r.gf+'-'+r.gc : fmtDate(j.date).slice(0,5)}</span>`; }).join('');
+    return `<div class="rival-card"><div class="n">${esc(name)}${isAdmin? `<span class="lvl ${d.nivel}">${d.nivel}</span>`:''}</div>
+      <div class="s">2025-26: <b>${d.pos}</b> en ${d.liga}<br>${d.pts} pts · ${d.gf} goles a favor · ${d.gc} en contra${d.prev!==name? '<br>Como «'+esc(d.prev)+'»':''}</div>
+      <div class="iv">${iv}</div></div>`;
+  }).join('');
+}
 
 /* ---------------- EXPORT TO EXCEL ---------------- */
 function exportToExcel(){
@@ -1021,7 +1225,8 @@ function exportToExcel(){
         'Fecha': fmtDate(m.date), 'Rival': m.rival, '#': i+1,
         'Portero en el momento': players.find(p=>p.id===g.portero)?.name || '',
         'En propia puerta': g.ownGoal? 'Sí':'No',
-        'Autor autogol': g.ownGoal? (players.find(p=>p.id===g.autor)?.name || '') : ''
+        'Autor autogol': g.ownGoal? (players.find(p=>p.id===g.autor)?.name || '') : '',
+        'Cómo fue': g.como || ''
       });
     });
   });
@@ -1057,10 +1262,15 @@ async function init(){
   matches = data.matches || [];
   trainings = data.trainings || [];
   adminPin = data.pin || await sha256Hex(DEFAULT_PIN);
-  if(!data.players){ await save(SKEY.players, players); }
-  if(!data.pin){ await save(SKEY.pin, adminPin); }
+  // Solo se crean los valores iniciales si de verdad no existen en la base de
+  // datos (primera vez). Si hubo un error de carga no se escribe nada.
+  if(loadFailed){ document.getElementById('loadAlert').classList.remove('hidden'); }
+  else {
+    if(data.missing.players){ await save(SKEY.players, players); }
+    if(data.missing.pin){ await save(SKEY.pin, adminPin); }
+  }
   applyAdminUI();
-  renderRoster(); renderMatches(); renderTrainings(); renderStats();
+  renderRoster(); renderMatches(); renderTrainings(); renderStats(); renderLiga();
 }
 init();
 </script>
